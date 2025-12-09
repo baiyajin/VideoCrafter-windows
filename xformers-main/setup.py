@@ -25,10 +25,13 @@ import torch
 from torch.utils.cpp_extension import (
     BuildExtension,
     CppExtension,
-    CUDA_HOME,
+    CUDA_HOME as TORCH_CUDA_HOME,
     CUDAExtension,
     ROCM_HOME,
 )
+
+# 优先使用环境变量中的 CUDA_HOME，如果没有则使用 PyTorch 检测到的
+CUDA_HOME = os.getenv("CUDA_HOME") or TORCH_CUDA_HOME
 
 this_dir = os.path.dirname(__file__)
 pt_attn_compat_file_path = os.path.join(
@@ -147,7 +150,11 @@ def get_cuda_version(cuda_dir) -> int:
             pass
     
     # 如果 PyTorch 方法失败，尝试使用 nvcc
-    nvcc_bin = "nvcc" if cuda_dir is None else cuda_dir + "/bin/nvcc"
+    # 使用 os.path.join 确保 Windows 路径正确
+    if cuda_dir is None:
+        nvcc_bin = "nvcc"
+    else:
+        nvcc_bin = os.path.join(cuda_dir, "bin", "nvcc.exe" if sys.platform == "win32" else "nvcc")
     try:
         raw_output = subprocess.check_output([nvcc_bin, "-V"], universal_newlines=True)
         output = raw_output.split()
