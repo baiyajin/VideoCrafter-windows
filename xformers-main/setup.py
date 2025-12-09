@@ -33,6 +33,12 @@ from torch.utils.cpp_extension import (
 # 优先使用环境变量中的 CUDA_HOME，如果没有则使用 PyTorch 检测到的
 CUDA_HOME = os.getenv("CUDA_HOME") or TORCH_CUDA_HOME
 
+# 确保环境变量 CUDA_HOME 被设置，以便 PyTorch 的构建系统使用
+if CUDA_HOME is not None and os.getenv("CUDA_HOME") is None:
+    os.environ["CUDA_HOME"] = CUDA_HOME
+    # 同时设置 CUDA_PATH（某些工具可能使用这个变量）
+    os.environ["CUDA_PATH"] = CUDA_HOME
+
 this_dir = os.path.dirname(__file__)
 pt_attn_compat_file_path = os.path.join(
     this_dir, "xformers", "ops", "fmha", "torch_attention_compat.py"
