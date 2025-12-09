@@ -8,11 +8,13 @@
 
 #include <cuda_runtime.h>
 
-#include <torch/csrc/stable/library.h>
-#include <torch/csrc/stable/ops.h>
-#include <torch/csrc/stable/stableivalue_conversions.h>
+// IMPORTANT: Include tensor_wrapper.h FIRST before ops.h and library.h
+// This ensures Tensor is properly defined before ops.h uses it
 // Use wrapper instead of tensor.h to avoid multiple definition errors
 #include <torch/csrc/stable/tensor_wrapper.h>
+#include <torch/csrc/stable/stableivalue_conversions.h>
+#include <torch/csrc/stable/library.h>
+#include <torch/csrc/stable/ops.h>
 // Include compatibility headers for PyTorch 2.9.1
 // These will be found in torch_compat/torch/ directory via include_dirs
 #include <torch/csrc/stable/device.h>
