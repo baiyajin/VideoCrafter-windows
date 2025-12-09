@@ -3,8 +3,9 @@
 // This file provides extensions to torch::stable::Tensor for PyTorch 2.9.1 compatibility
 // We use a technique to inject methods into the Tensor class via a helper struct
 
-#include <torch/csrc/stable/tensor.h>
-#include <torch/csrc/stable/tensor_inl.h>
+// Use our wrapper instead of tensor.h to avoid multiple definition errors
+// tensor_wrapper.h already includes tensor_struct.h and provides inline scalar_type()
+#include <torch/csrc/stable/tensor_wrapper.h>
 #include <torch/csrc/stable/device.h>
 #include <torch/csrc/inductor/aoti_torch/c/shim.h>
 #include <vector>
