@@ -13,9 +13,10 @@
 #include <torch/csrc/stable/stableivalue_conversions.h>
 #include <torch/csrc/stable/tensor.h>
 // Include compatibility headers for PyTorch 2.9.1
-#include "../../torch_compat/csrc/stable/device.h"
-#include "../../torch_compat/csrc/stable/tensor_ext.h"
-#include "../../torch_compat/headeronly/core/TensorAccessor.h"
+// These will be found in torch_compat/torch/ directory via include_dirs
+#include <torch/csrc/stable/device.h>
+#include <torch/csrc/stable/tensor_ext.h>
+#include <torch/headeronly/core/TensorAccessor.h>
 #include <torch/headeronly/util/Metaprogramming.h>
 
 namespace {
