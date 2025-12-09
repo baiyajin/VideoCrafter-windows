@@ -2,7 +2,22 @@
 #include <mutex>
 #include <vector>
 
-#include "pt_stable_utils.h"
+#include <cuda_runtime.h>
+#include <torch/csrc/stable/accelerator.h>
+#include <torch/csrc/inductor/aoti_torch/c/shim.h>
+
+// Define XF_CUDA_CHECK macro locally to avoid including the entire pt_stable_utils.h
+// which might indirectly include tensor_inl.h and cause multiple definition errors
+#define XF_CUDA_CHECK(EXPR)                                                    \
+  do {                                                                         \
+    const cudaError_t __err = EXPR;                                            \
+    if (__err != cudaSuccess) {                                                \
+      throw std::runtime_error(cudaGetErrorString(__err));                     \
+    }                                                                          \
+  } while (0)
+
+// Forward declaration to avoid including pt_stable_utils.h
+// which includes many headers that might cause multiple definition errors
 
 namespace {
 
