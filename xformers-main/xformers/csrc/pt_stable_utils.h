@@ -17,7 +17,7 @@
 #include <torch/csrc/stable/device.h>
 #include <torch/csrc/stable/tensor_ext.h>
 #include <torch/headeronly/core/TensorAccessor.h>
-#include <torch/headeronly/util/Metaprogramming.h>
+// Note: Metaprogramming.h is not available in PyTorch 2.9.1, but c10::guts types are available via other headers
 
 namespace {
 
