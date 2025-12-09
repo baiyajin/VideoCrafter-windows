@@ -17,7 +17,10 @@
 #include <torch/csrc/stable/device.h>
 #include <torch/csrc/stable/tensor_ext.h>
 #include <torch/headeronly/core/TensorAccessor.h>
-// Note: Metaprogramming.h is not available in PyTorch 2.9.1, but c10::guts types are available via other headers
+// Include c10::guts types
+#include <c10/util/TypeList.h>
+#include <c10/util/Metaprogramming.h>
+#include <torch/csrc/inductor/aoti_torch/c/shim.h>
 
 namespace {
 
@@ -26,7 +29,7 @@ std::tuple<T...> unbox_to_tuple_impl(
     StableIValue* stack,
     std::index_sequence<I...>) {
   return std::make_tuple(
-      torch::stable::detail::to<std::remove_cv_t<std::remove_reference_t<T>>>(
+      to<std::remove_cv_t<std::remove_reference_t<T>>>(
           stack[I])...);
 }
 
@@ -41,7 +44,7 @@ void box_from_tuple_impl(
     StableIValue* stack,
     std::tuple<T...> vals,
     std::index_sequence<I...>) {
-  ((stack[I] = torch::stable::detail::from<
+  ((stack[I] = from<
         std::remove_cv_t<std::remove_reference_t<T>>>(std::get<I>(vals))),
    ...);
 }
@@ -101,7 +104,7 @@ struct boxer_impl<
     std::tuple<ParameterTypes...> args =
         unbox_to_tuple<ParameterTypes...>(stack);
     auto res = std::apply(func, args);
-    stack[0] = torch::stable::detail::from<ReturnType>(res);
+    stack[0] = from<ReturnType>(res);
     // box_from_tuple<std::tuple<ReturnType>>(stack, std::make_tuple(res));
   }
 };
@@ -213,11 +216,11 @@ inline torch::stable::Tensor xf_view_dtype(
     torch::headeronly::ScalarType dtype) {
   const auto num_args = 2;
   std::array<StableIValue, num_args> stack{
-      torch::stable::detail::from(self), torch::stable::detail::from(dtype)};
+      from(self), from(dtype)};
   // view.dtype(Tensor(a) self, ScalarType dtype) -> Tensor(a)
-  TORCH_ERROR_CODE_CHECK(torch_call_dispatcher(
-      "aten::view", "dtype", stack.data(), TORCH_ABI_VERSION));
-  return torch::stable::detail::to<torch::stable::Tensor>(stack[0]);
+  TORCH_ERROR_CODE_CHECK(aoti_torch_call_dispatcher(
+      "aten::view", "dtype", stack.data()));
+  return to<torch::stable::Tensor>(stack[0]);
 }
 
 inline torch::stable::Tensor xf_slice(
@@ -227,16 +230,16 @@ inline torch::stable::Tensor xf_slice(
     std::optional<int64_t> end) {
   const auto num_args = 5;
   std::array<StableIValue, num_args> stack{
-      torch::stable::detail::from(self),
-      torch::stable::detail::from(dim),
-      torch::stable::detail::from(start),
-      torch::stable::detail::from(end),
-      torch::stable::detail::from(1)};
+      from(self),
+      from(dim),
+      from(start),
+      from(end),
+      from(1)};
   // slice.Tensor(Tensor(a) self, int dim=0, SymInt? start=None, SymInt?
   // end=None, SymInt step=1) -> Tensor(a)
-  TORCH_ERROR_CODE_CHECK(torch_call_dispatcher(
-      "aten::slice", "Tensor", stack.data(), TORCH_ABI_VERSION));
-  return torch::stable::detail::to<torch::stable::Tensor>(stack[0]);
+  TORCH_ERROR_CODE_CHECK(aoti_torch_call_dispatcher(
+      "aten::slice", "Tensor", stack.data()));
+  return to<torch::stable::Tensor>(stack[0]);
 }
 
 inline torch::stable::Tensor xf_select(
@@ -245,13 +248,13 @@ inline torch::stable::Tensor xf_select(
     int64_t index) {
   const auto num_args = 3;
   std::array<StableIValue, num_args> stack{
-      torch::stable::detail::from(self),
-      torch::stable::detail::from(dim),
-      torch::stable::detail::from(index)};
+      from(self),
+      from(dim),
+      from(index)};
   // select.int(Tensor(a) self, int dim, SymInt index) -> Tensor(a)
-  TORCH_ERROR_CODE_CHECK(torch_call_dispatcher(
-      "aten::select", "int", stack.data(), TORCH_ABI_VERSION));
-  return torch::stable::detail::to<torch::stable::Tensor>(stack[0]);
+  TORCH_ERROR_CODE_CHECK(aoti_torch_call_dispatcher(
+      "aten::select", "int", stack.data()));
+  return to<torch::stable::Tensor>(stack[0]);
 }
 
 inline torch::stable::Tensor xf_permute(
@@ -259,11 +262,11 @@ inline torch::stable::Tensor xf_permute(
     std::vector<int64_t> dims) {
   const auto num_args = 2;
   std::array<StableIValue, num_args> stack{
-      torch::stable::detail::from(self), torch::stable::detail::from(dims)};
+      from(self), from(dims)};
   // permute(Tensor(a) self, int[] dims) -> Tensor(a)
-  TORCH_ERROR_CODE_CHECK(torch_call_dispatcher(
-      "aten::permute", "", stack.data(), TORCH_ABI_VERSION));
-  return torch::stable::detail::to<torch::stable::Tensor>(stack[0]);
+  TORCH_ERROR_CODE_CHECK(aoti_torch_call_dispatcher(
+      "aten::permute", "", stack.data()));
+  return to<torch::stable::Tensor>(stack[0]);
 }
 
 inline torch::stable::Tensor xf_contiguous(
@@ -271,14 +274,14 @@ inline torch::stable::Tensor xf_contiguous(
     int32_t memory_format = aoti_torch_memory_format_contiguous_format()) {
   const auto num_args = 2;
   std::array<StableIValue, num_args> stack{
-      torch::stable::detail::from(self),
-      torch::stable::detail::from(memory_format),
+      from(self),
+      from(memory_format),
   };
   // contiguous(Tensor(a) self, *, MemoryFormat memory_format=contiguous_format)
   // -> Tensor(a)
-  TORCH_ERROR_CODE_CHECK(torch_call_dispatcher(
-      "aten::contiguous", "", stack.data(), TORCH_ABI_VERSION));
-  return torch::stable::detail::to<torch::stable::Tensor>(stack[0]);
+  TORCH_ERROR_CODE_CHECK(aoti_torch_call_dispatcher(
+      "aten::contiguous", "", stack.data()));
+  return to<torch::stable::Tensor>(stack[0]);
 }
 
 inline torch::stable::Tensor xf_zeros(
@@ -288,16 +291,16 @@ inline torch::stable::Tensor xf_zeros(
     std::optional<bool> pin_memory = std::nullopt) {
   const auto num_args = 5;
   std::array<StableIValue, num_args> stack{
-      torch::stable::detail::from(size),
-      torch::stable::detail::from(dtype),
-      torch::stable::detail::from(std::nullopt),
-      torch::stable::detail::from(device),
-      torch::stable::detail::from(pin_memory)};
+      from(size),
+      from(dtype),
+      from(std::nullopt),
+      from(device),
+      from(pin_memory)};
   // zeros(SymInt[] size, *, ScalarType? dtype=None, Layout? layout=None,
   // Device? device=None, bool? pin_memory=None) -> Tensor
-  TORCH_ERROR_CODE_CHECK(torch_call_dispatcher(
-      "aten::zeros", "", stack.data(), TORCH_ABI_VERSION));
-  return torch::stable::detail::to<torch::stable::Tensor>(stack[0]);
+  TORCH_ERROR_CODE_CHECK(aoti_torch_call_dispatcher(
+      "aten::zeros", "", stack.data()));
+  return to<torch::stable::Tensor>(stack[0]);
 }
 
 template <typename T>
@@ -309,17 +312,17 @@ inline torch::stable::Tensor xf_full(
     std::optional<bool> pin_memory = std::nullopt) {
   const auto num_args = 6;
   std::array<StableIValue, num_args> stack{
-      torch::stable::detail::from(size),
-      torch::stable::detail::from(fill_value),
-      torch::stable::detail::from(dtype),
-      torch::stable::detail::from(std::nullopt),
-      torch::stable::detail::from(device),
-      torch::stable::detail::from(pin_memory)};
+      from(size),
+      from(fill_value),
+      from(dtype),
+      from(std::nullopt),
+      from(device),
+      from(pin_memory)};
   // full(SymInt[] size, Scalar fill_value, *, ScalarType? dtype=None, Layout?
   // layout=None, Device? device=None, bool? pin_memory=None) -> Tensor
   TORCH_ERROR_CODE_CHECK(
-      torch_call_dispatcher("aten::full", "", stack.data(), TORCH_ABI_VERSION));
-  return torch::stable::detail::to<torch::stable::Tensor>(stack[0]);
+      aoti_torch_call_dispatcher("aten::full", "", stack.data()));
+  return to<torch::stable::Tensor>(stack[0]);
 }
 
 inline torch::stable::Tensor xf_cumsum(
@@ -328,13 +331,13 @@ inline torch::stable::Tensor xf_cumsum(
     std::optional<torch::headeronly::ScalarType> dtype = std::nullopt) {
   const auto num_args = 3;
   std::array<StableIValue, num_args> stack{
-      torch::stable::detail::from(self),
-      torch::stable::detail::from(dim),
-      torch::stable::detail::from(dtype)};
+      from(self),
+      from(dim),
+      from(dtype)};
   // cumsum(Tensor self, int dim, *, ScalarType? dtype=None) -> Tensor
-  TORCH_ERROR_CODE_CHECK(torch_call_dispatcher(
-      "aten::cumsum", "", stack.data(), TORCH_ABI_VERSION));
-  return torch::stable::detail::to<torch::stable::Tensor>(stack[0]);
+  TORCH_ERROR_CODE_CHECK(aoti_torch_call_dispatcher(
+      "aten::cumsum", "", stack.data()));
+  return to<torch::stable::Tensor>(stack[0]);
 }
 
 inline torch::stable::Tensor xf_resize_(
@@ -343,35 +346,25 @@ inline torch::stable::Tensor xf_resize_(
     int32_t memory_format = aoti_torch_memory_format_contiguous_format()) {
   const auto num_args = 3;
   std::array<StableIValue, num_args> stack{
-      torch::stable::detail::from(self),
-      torch::stable::detail::from(size),
-      torch::stable::detail::from(memory_format)};
+      from(self),
+      from(size),
+      from(memory_format)};
   // resize_(Tensor(a!) self, SymInt[] size, *, MemoryFormat?
   // memory_format=None) -> Tensor(a!)
-  TORCH_ERROR_CODE_CHECK(torch_call_dispatcher(
-      "aten::resize_", "", stack.data(), TORCH_ABI_VERSION));
-  return torch::stable::detail::to<torch::stable::Tensor>(stack[0]);
+  TORCH_ERROR_CODE_CHECK(aoti_torch_call_dispatcher(
+      "aten::resize_", "", stack.data()));
+  return to<torch::stable::Tensor>(stack[0]);
 }
 
 template <typename T>
 inline T xf_item(const torch::stable::Tensor& self) {
-  // const auto num_args = 1;
-  // std::array<StableIValue, num_args> stack{
-  //     torch::stable::detail::from(self)};
-  // // item(Tensor self) -> Scalar
-  // TORCH_ERROR_CODE_CHECK(torch_call_dispatcher(
-  //     "aten::item", "", stack.data(), TORCH_ABI_VERSION));
-  // return torch::stable::detail::to<T>(stack[0]);
-  auto sizes_vec = torch::stable::sizes(self);
-  torch::stable::Tensor cpu_self = torch::stable::empty(
-      sizes_vec,
-      self.scalar_type(),
-      std::nullopt,
-      torch::stable::Device(torch::headeronly::kCPU));
-  torch::stable::copy_(cpu_self, self, /*non_blocking=*/false);
-  static_assert(std::is_trivially_copyable_v<T>, "");
-  T res = *cpu_self.const_data_ptr<T>();
-  return res;
+  // Simplified implementation: use item op via dispatcher
+  const auto num_args = 1;
+  std::array<StableIValue, num_args> stack{from(self)};
+  // item(Tensor self) -> Scalar
+  TORCH_ERROR_CODE_CHECK(aoti_torch_call_dispatcher(
+      "aten::item", "", stack.data()));
+  return to<T>(stack[0]);
 }
 
 size_t xf_element_size(const torch::stable::Tensor& self) {

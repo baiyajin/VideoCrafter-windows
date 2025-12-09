@@ -44,9 +44,9 @@ template <
     typename LayoutInputB>
 torch::stable::Tensor two_four_sgemm_cutlass(
     const torch::stable::Tensor& tensor_a,
-    const torch::headeronly::IntHeaderOnlyArrayRef::value_type& tensor_a_stride,
+    const int64_t& tensor_a_stride,
     const torch::stable::Tensor& tensor_b,
-    const torch::headeronly::IntHeaderOnlyArrayRef::value_type& tensor_b_stride,
+    const int64_t& tensor_b_stride,
     const torch::stable::Tensor& meta_reordered) {
   // Fix CUTLASS sparse GEMM template arguments that are not
   // provided as template argument of this function, and create an
