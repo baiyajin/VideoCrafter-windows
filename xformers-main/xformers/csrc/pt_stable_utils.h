@@ -11,7 +11,8 @@
 #include <torch/csrc/stable/library.h>
 #include <torch/csrc/stable/ops.h>
 #include <torch/csrc/stable/stableivalue_conversions.h>
-#include <torch/csrc/stable/tensor.h>
+// Use wrapper instead of tensor.h to avoid multiple definition errors
+#include <torch/csrc/stable/tensor_wrapper.h>
 // Include compatibility headers for PyTorch 2.9.1
 // These will be found in torch_compat/torch/ directory via include_dirs
 #include <torch/csrc/stable/device.h>

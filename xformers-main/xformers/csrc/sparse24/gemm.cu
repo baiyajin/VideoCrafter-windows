@@ -6,7 +6,8 @@
 #include <torch/csrc/stable/device.h>
 #include <torch/csrc/stable/library.h>
 #include <torch/csrc/stable/ops.h>
-#include <torch/csrc/stable/tensor.h>
+// Use wrapper instead of tensor.h to avoid multiple definition errors
+#include <torch/csrc/stable/tensor_wrapper.h>
 #include <torch/headeronly/core/ScalarType.h>
 
 #include <cutlass/cutlass.h>
