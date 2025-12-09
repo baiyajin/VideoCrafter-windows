@@ -7,4 +7,32 @@ __pycache__
 checkpoints
 results
 .venv
-xformers-main
+
+# xformers-main build artifacts
+xformers-main/build/
+xformers-main/dist/
+xformers-main/*.egg-info/
+xformers-main/__pycache__/
+xformers-main/.mypy_cache/
+xformers-main/.pyre/
+xformers-main/.cache/
+xformers-main/.idea/
+xformers-main/.vscode/
+xformers-main/.coverage
+xformers-main/.coverage.*
+xformers-main/test-results/
+xformers-main/compile_commands.json
+
+# xformers-main generated files
+xformers-main/xformers/_flash_attn/
+xformers-main/xformers/version.py
+xformers-main/xformers/cpp_lib.json
+xformers-main/xformers/benchmarks/LRA/datasets
+xformers-main/xformers/benchmarks/LRA/logs
+xformers-main/examples/input.txt
+xformers-main/examples/lightning_logs
+xformers-main/examples/data
+xformers-main/multirun
+xformers-main/outputs
+xformers-main/.benchmarks
+xformers-main/my_runs.md
