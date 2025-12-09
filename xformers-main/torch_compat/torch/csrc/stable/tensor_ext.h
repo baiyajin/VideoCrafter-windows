@@ -4,6 +4,7 @@
 // We use a technique to inject methods into the Tensor class via a helper struct
 
 // Use our wrapper instead of tensor.h to avoid multiple definition errors
+// tensor_wrapper.h already includes tensor_struct.h and provides inline scalar_type()
 #include <torch/csrc/stable/tensor_wrapper.h>
 #include <torch/csrc/stable/device.h>
 #include <vector>
