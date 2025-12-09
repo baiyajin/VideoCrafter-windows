@@ -1,0 +1,12 @@
+PS D:\baiyajin-code\VideoCrafter-main> .\.venv\Scripts\Activate.ps1; python gradio_app.py       
+A matching Triton is not available, some optimizations will not be enabled.
+Error caught was: No module named 'triton'
+AE working on z of shape (1, 4, 64, 64) = 16384 dimensions.
+D:\baiyajin-code\VideoCrafter-main\.venv\lib\site-packages\timm\models\layers\__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers     
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+>>> model checkpoint loaded.
+* Running on local URL:  http://127.0.0.1:7860
+* To create a public link, set `share=True` in `launch()`.
+start: Robot dancing in times square 2025-12-09 09:11:01
+DDIM scale True
+ddim device cuda:0
