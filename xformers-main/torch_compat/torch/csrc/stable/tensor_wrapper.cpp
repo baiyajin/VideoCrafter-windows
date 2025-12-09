@@ -1,7 +1,10 @@
 // Implementation file for tensor_wrapper.h
 // This file contains the non-inline definition of scalar_type() to avoid multiple definition errors
+//
+// IMPORTANT: Do NOT include tensor_wrapper.h here, as it may indirectly include tensor.h
+// which would cause multiple definition errors. Only include the minimal headers needed.
 
-#include <torch/csrc/stable/tensor_wrapper.h>
+#include <torch/csrc/stable/tensor_struct.h>
 #include <torch/csrc/stable/stableivalue_conversions.h>
 #include <torch/headeronly/core/ScalarType.h>
 #include <torch/headeronly/util/shim_utils.h>
