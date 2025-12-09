@@ -20,6 +20,14 @@ import sys
 from pathlib import Path
 from typing import List, Optional
 
+# 在导入 PyTorch 之前设置 CUDA_HOME，确保 PyTorch 使用正确的路径
+# 优先使用环境变量中的 CUDA_HOME
+env_cuda_home = os.getenv("CUDA_HOME")
+if env_cuda_home:
+    os.environ["CUDA_HOME"] = env_cuda_home
+    # 同时设置 CUDA_PATH（某些工具可能使用这个变量）
+    os.environ["CUDA_PATH"] = env_cuda_home
+
 import setuptools
 import torch
 from torch.utils.cpp_extension import (
@@ -34,7 +42,7 @@ from torch.utils.cpp_extension import (
 CUDA_HOME = os.getenv("CUDA_HOME") or TORCH_CUDA_HOME
 
 # 确保环境变量 CUDA_HOME 被设置，以便 PyTorch 的构建系统使用
-if CUDA_HOME is not None and os.getenv("CUDA_HOME") is None:
+if CUDA_HOME is not None:
     os.environ["CUDA_HOME"] = CUDA_HOME
     # 同时设置 CUDA_PATH（某些工具可能使用这个变量）
     os.environ["CUDA_PATH"] = CUDA_HOME
