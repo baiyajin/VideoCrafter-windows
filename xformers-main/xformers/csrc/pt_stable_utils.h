@@ -439,7 +439,9 @@ inline T xf_item(const torch::stable::Tensor& self) {
   return to<T>(stack[0]);
 }
 
-size_t xf_element_size(const torch::stable::Tensor& self) {
+// Make this function inline to avoid ODR violations
+// The function calls scalar_type() which is defined in tensor_wrapper.cpp
+inline size_t xf_element_size(const torch::stable::Tensor& self) {
 #define RETURN_SIZEOF_IF_MATCHES_(cpp_type, dtype)                  \
   if (self.scalar_type() == torch::headeronly::ScalarType::dtype) { \
     return sizeof(cpp_type);                                        \
