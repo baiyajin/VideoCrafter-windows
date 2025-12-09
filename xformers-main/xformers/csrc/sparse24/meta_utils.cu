@@ -41,11 +41,11 @@ torch::stable::Tensor _sparse24_pack_mask(const torch::stable::Tensor input) {
       input,
       {input.size(0), input.size(1) / 16},
       torch::headeronly::ScalarType::Short);
-  auto input_a = torch::headeronly::HeaderOnlyTensorAccessor<bool, 2>(
+  auto input_a = torch::headeronly::HeaderOnlyGenericPackedTensorAccessor<bool, 2>(
       torch::stable::mutable_data_ptr<bool>(input),
       torch::stable::sizes(input).data(),
       torch::stable::strides(input).data());
-  auto packed_a = torch::headeronly::HeaderOnlyTensorAccessor<int16_t, 2>(
+  auto packed_a = torch::headeronly::HeaderOnlyGenericPackedTensorAccessor<int16_t, 2>(
       torch::stable::mutable_data_ptr<int16_t>(packed),
       torch::stable::sizes(packed).data(),
       torch::stable::strides(packed).data());

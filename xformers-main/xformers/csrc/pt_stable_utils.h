@@ -24,6 +24,75 @@
 
 namespace {
 
+// Add specializations for std::vector and std::string in detail namespace
+// These are needed because PyTorch 2.9.1 stable API doesn't support them directly
+namespace detail {
+
+// Specialization for std::vector<int64_t> => StableIValue
+template <>
+struct FromImpl<std::vector<int64_t>> {
+  static StableIValue call(const std::vector<int64_t>& val) {
+    // Allocate heap memory and pass pointer (similar to std::optional)
+    int64_t* data = new int64_t[val.size()];
+    std::copy(val.begin(), val.end(), data);
+    // Wrap in StableIValue* (similar to std::optional handling)
+    StableIValue* wrapper = new StableIValue[2];
+    wrapper[0] = from(reinterpret_cast<void*>(data));
+    wrapper[1] = from(static_cast<int64_t>(val.size()));
+    return from(wrapper);
+  }
+};
+
+// Specialization for StableIValue => std::vector<int64_t>
+template <>
+struct ToImpl<std::vector<int64_t>> {
+  static std::vector<int64_t> call(StableIValue val) {
+    StableIValue* wrapper = to<StableIValue*>(val);
+    if (wrapper == nullptr) {
+      return std::vector<int64_t>();
+    }
+    int64_t* data_ptr = static_cast<int64_t*>(to<void*>(wrapper[0]));
+    int64_t size = to<int64_t>(wrapper[1]);
+    std::vector<int64_t> result(data_ptr, data_ptr + size);
+    delete[] data_ptr;
+    delete[] wrapper;
+    return result;
+  }
+};
+
+// Specialization for std::string => StableIValue
+template <>
+struct FromImpl<std::string> {
+  static StableIValue call(const std::string& val) {
+    char* data = new char[val.size()];
+    std::copy(val.begin(), val.end(), data);
+    StableIValue* wrapper = new StableIValue[2];
+    wrapper[0] = from(reinterpret_cast<void*>(data));
+    wrapper[1] = from(static_cast<int64_t>(val.size()));
+    return from(wrapper);
+  }
+};
+
+// Specialization for StableIValue => std::string
+template <>
+struct ToImpl<std::string> {
+  static std::string call(StableIValue val) {
+    StableIValue* wrapper = to<StableIValue*>(val);
+    if (wrapper == nullptr) {
+      return std::string();
+    }
+    void* data_ptr = to<void*>(wrapper[0]);
+    int64_t size = to<int64_t>(wrapper[1]);
+    std::string result(static_cast<const char*>(data_ptr), size);
+    delete[] static_cast<char*>(data_ptr);
+    delete[] wrapper;
+    return result;
+  }
+};
+
+} // namespace detail
+
+
 template <class... T, std::size_t... I>
 std::tuple<T...> unbox_to_tuple_impl(
     StableIValue* stack,
