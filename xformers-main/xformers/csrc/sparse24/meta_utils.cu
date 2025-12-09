@@ -41,14 +41,16 @@ torch::stable::Tensor _sparse24_pack_mask(const torch::stable::Tensor input) {
       input,
       {input.size(0), input.size(1) / 16},
       torch::headeronly::ScalarType::Short);
-  auto input_a = torch::headeronly::HeaderOnlyGenericPackedTensorAccessor<bool, 2>(
-      torch::stable::mutable_data_ptr<bool>(input),
-      torch::stable::sizes(input).data(),
-      torch::stable::strides(input).data());
-  auto packed_a = torch::headeronly::HeaderOnlyGenericPackedTensorAccessor<int16_t, 2>(
-      torch::stable::mutable_data_ptr<int16_t>(packed),
-      torch::stable::sizes(packed).data(),
-      torch::stable::strides(packed).data());
+  
+  // For __host__ functions, we need to use raw pointers instead of TensorAccessor
+  // because TensorAccessor's operator[] is __device__ only
+  bool* input_ptr = torch::stable::mutable_data_ptr<bool>(input);
+  int16_t* packed_ptr = torch::stable::mutable_data_ptr<int16_t>(packed);
+  auto input_sizes = torch::stable::sizes(input);
+  auto input_strides = torch::stable::strides(input);
+  auto packed_sizes = torch::stable::sizes(packed);
+  auto packed_strides = torch::stable::strides(packed);
+  
   for (int row = 0; row < input.size(0); ++row) {
     for (int col_s = 0; col_s < input.size(1); col_s += 16) {
       ElementInputE out = 0;
@@ -56,7 +58,9 @@ torch::stable::Tensor _sparse24_pack_mask(const torch::stable::Tensor input) {
         int first_pos = -1;
         int second_pos = -1;
         for (int i = 0; i < 4; ++i) {
-          if (input_a[row][col_s + bit_shifts + i]) {
+          // Calculate index manually for host function
+          int64_t input_idx = row * input_strides[0] + (col_s + bit_shifts + i) * input_strides[1];
+          if (input_ptr[input_idx]) {
             if (first_pos == -1) {
               first_pos = i;
             } else if (second_pos == -1) {
@@ -81,7 +85,9 @@ torch::stable::Tensor _sparse24_pack_mask(const torch::stable::Tensor input) {
             "): not enough values");
         out |= (first_pos | (second_pos * 4)) << bit_shifts;
       }
-      packed_a[row][col_s / 16] = out;
+      // Calculate index manually for host function
+      int64_t packed_idx = row * packed_strides[0] + (col_s / 16) * packed_strides[1];
+      packed_ptr[packed_idx] = out;
     }
   }
   return packed;
