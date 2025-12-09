@@ -7,6 +7,7 @@ __pycache__
 checkpoints
 results
 .venv
+.log
 
 # xformers-main build artifacts
 xformers-main/build/
