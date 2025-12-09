@@ -1,0 +1,17 @@
+// Implementation file for tensor_wrapper.h
+// This file contains the non-inline definition of scalar_type() to avoid multiple definition errors
+
+#include <torch/csrc/stable/tensor_wrapper.h>
+
+namespace torch::stable {
+using torch::headeronly::ScalarType;
+
+// Non-inline definition of scalar_type() to avoid multiple definition errors
+// This will be compiled only once and linked with all translation units
+ScalarType Tensor::scalar_type() const {
+  int32_t dtype;
+  TORCH_ERROR_CODE_CHECK(aoti_torch_get_dtype(ath_.get(), &dtype));
+  return to<ScalarType>(from(dtype));
+}
+} // namespace torch::stable
+

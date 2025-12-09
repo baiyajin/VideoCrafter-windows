@@ -488,6 +488,12 @@ def get_extensions():
 
     sources = glob.glob(os.path.join(extensions_dir, "**", "*.cpp"), recursive=True)
     source_cuda = glob.glob(os.path.join(extensions_dir, "**", "*.cu"), recursive=True)
+    
+    # Add tensor_wrapper.cpp to sources to provide single definition of scalar_type()
+    compat_dir = os.path.join(this_dir, "torch_compat")
+    tensor_wrapper_cpp = os.path.join(compat_dir, "torch", "csrc", "stable", "tensor_wrapper.cpp")
+    if os.path.exists(tensor_wrapper_cpp):
+        sources.append(tensor_wrapper_cpp)
     fmha_source_cuda = glob.glob(
         os.path.join(extensions_dir, "**", "fmha", "**", "*.cu"), recursive=True
     )
@@ -709,6 +715,12 @@ def get_extensions():
             "-greedy-reverse-local-assignment=1",
         ] + cc_flag
 
+    # Add linker flags for Windows to merge identical functions (ICF)
+    # This helps avoid multiple definition errors for inline functions
+    extra_link_args = []
+    if sys.platform == "win32":
+        extra_link_args = ["/OPT:ICF"]  # Identical COMDAT Folding
+
     ext_modules.append(
         extension(
             "xformers._C",
@@ -716,6 +728,7 @@ def get_extensions():
             include_dirs=[os.path.abspath(p) for p in include_dirs],
             define_macros=define_macros,
             extra_compile_args=extra_compile_args,
+            extra_link_args=extra_link_args,
             py_limited_api=True,
         )
     )

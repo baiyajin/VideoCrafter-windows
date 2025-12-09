@@ -12,19 +12,9 @@
 namespace torch::stable {
 using torch::headeronly::ScalarType;
 
-// Provide inline implementation of scalar_type() to avoid multiple definition errors
-// On Windows with MSVC, we need to use __forceinline to ensure the function is truly inlined
-// and doesn't generate multiple definitions during linking
-#ifdef _WIN32
-__forceinline
-#else
-inline __attribute__((always_inline))
-#endif
-ScalarType Tensor::scalar_type() const {
-  int32_t dtype;
-  TORCH_ERROR_CODE_CHECK(aoti_torch_get_dtype(ath_.get(), &dtype));
-  return to<ScalarType>(from(dtype));
-}
+// Declaration only - implementation is in tensor_wrapper.cpp to avoid multiple definition errors
+// This ensures the function is only defined once, even when included in multiple translation units
+ScalarType Tensor::scalar_type() const;
 } // namespace torch::stable
 
 // Now include the rest of tensor.h functionality
