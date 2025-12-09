@@ -446,4 +446,43 @@ size_t xf_element_size(const torch::stable::Tensor& self) {
   throw std::runtime_error("Unsupported dtype");
 }
 
+// Compatibility function for view operation
+// Handles both explicit sizes and -1 for inferred dimension
+inline torch::stable::Tensor xf_view(
+    const torch::stable::Tensor& self,
+    std::vector<int64_t> size) {
+  // Replace -1 with inferred size
+  int64_t total_elements = 1;
+  int64_t inferred_dim = -1;
+  for (size_t i = 0; i < size.size(); ++i) {
+    if (size[i] == -1) {
+      inferred_dim = static_cast<int64_t>(i);
+    } else {
+      total_elements *= size[i];
+    }
+  }
+  if (inferred_dim >= 0) {
+    auto sizes_vec = torch::stable::sizes(self);
+    int64_t self_elements = 1;
+    for (size_t i = 0; i < sizes_vec.size(); ++i) {
+      self_elements *= sizes_vec[i];
+    }
+    size[inferred_dim] = self_elements / total_elements;
+  }
+  // Use reshape via dispatcher
+  const auto num_args = 2;
+  std::array<StableIValue, num_args> stack{
+      from(self), from(size)};
+  TORCH_ERROR_CODE_CHECK(aoti_torch_call_dispatcher(
+      "aten::reshape", "", stack.data()));
+  return to<torch::stable::Tensor>(stack[0]);
+}
+
 } // namespace
+
+// Add view to torch::stable namespace for compatibility
+namespace torch::stable {
+inline Tensor view(const Tensor& self, std::vector<int64_t> size) {
+  return xf_view(self, size);
+}
+} // namespace torch::stable
